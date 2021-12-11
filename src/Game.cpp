@@ -79,10 +79,6 @@ void Game::checkInput() {
 		santa.update(deltaX, deltaY);
 		santa.setMovingY(true);
 	}
-//	if(keystates[SDL_SCANCODE_SPACE] && state == GAME) {
-//		drop();
-//		presentsDropped++;
-//	}
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
 		if (e.type == SDL_KEYDOWN) {
@@ -106,7 +102,6 @@ void Game::checkInput() {
 }
 
 void Game::updateFPS(int startTick) {
-
 	if (1000 / MAX_FPS > SDL_GetTicks() - startTick) {
 		SDL_Delay(1000 / MAX_FPS - (SDL_GetTicks() - startTick));
 	}
@@ -236,9 +231,9 @@ void Game::draw() {
 		window.render(0, 0, backgroundTexture);
 		window.render(0, 0, mountainTexture);
 		window.render(0, 0, snowTexture);
-		window.renderCenter(Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT - 100),
+		window.renderCenter(Vector2f(SCREEN_WIDTH, sin(SDL_GetTicks()/100) * 2 + SCREEN_HEIGHT - 100),
 				"Santa Delivery Game", font84, black);
-		window.renderCenter(Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT + 100),
+		window.renderCenter(Vector2f(SCREEN_WIDTH, sin(SDL_GetTicks()/100) * 2 + SCREEN_HEIGHT + 100),
 				"Help Santa Deliver His Presents", font36, black);
 		window.renderCenter(Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT + 300),
 				"Press Space to Start", font24, black);
