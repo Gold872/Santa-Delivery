@@ -263,7 +263,7 @@ void Game::checkObstacleCollisions() {
 
 void Game::spawnNewObstacle(int houseOffset) {
 	//Assigns a random obstacle to be assigned if the houses are spaced far apart enough
-	if (houseOffset > 700) {
+	if (houseOffset > 750) {
 		int randObstacleInt = rand() % 2;
 		switch (randObstacleInt) {
 		case 0:
@@ -296,11 +296,12 @@ void Game::draw() {
 		window.render(0, 0, snowTexture);
 		window.renderCenter(
 				Vector2f(SCREEN_WIDTH,
-						sin(SDL_GetTicks() / 100) * 2 + SCREEN_HEIGHT - 100),
-				"Santa Delivery Game", font84, black);
+						5 * SDL_sin(SDL_GetTicks() * (3.14 / 750))
+								+ SCREEN_HEIGHT - 100), "Santa Delivery Game",
+				font84, black);
 		window.renderCenter(
 				Vector2f(SCREEN_WIDTH,
-						sin(SDL_GetTicks() / 100) * 2 + SCREEN_HEIGHT + 100),
+						5 * SDL_sin(SDL_GetTicks() * (3.14 / 750)) + SCREEN_HEIGHT + 100),
 				"Help Santa Deliver His Presents while Dodging Obstacles in the Air",
 				font36, black);
 		window.renderCenter(Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT + 300),
