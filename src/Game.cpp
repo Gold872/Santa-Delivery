@@ -173,35 +173,7 @@ void Game::checkCollisions() {
 	checkSantaCollisions();
 	checkPresentCollisions();
 	checkObstacleCollisions();
-
-	//Checks if the first house is off the screen
-	if (houses[0].getX() + 352 < 0) {
-		int randHouseOffset = rand() % 900 + 600;
-		houses.erase(houses.begin() + 0);
-		houses.push_back(house);
-		houses[houses.size() - 1].setPosition(
-				houses[houses.size() - 2].getX() + randHouseOffset,
-				houses[0].getY());
-		//Assigns the new house a random texture
-		int randHouseInt = rand() % 4;
-		switch (randHouseInt) {
-		case 0:
-			houses[houses.size() - 1].setTexture(houseTexture1);
-			break;
-		case 1:
-			houses[houses.size() - 1].setTexture(houseTexture2);
-			break;
-		case 2:
-			houses[houses.size() - 1].setTexture(houseTexture3);
-			break;
-		case 3:
-			houses[houses.size() - 1].setTexture(houseTexture4);
-			break;
-		default:
-			break;
-		}
-		spawnNewObstacle(randHouseOffset);
-	}
+	checkHouseCollisions();
 }
 
 void Game::checkSantaCollisions() {
@@ -245,6 +217,37 @@ void Game::checkPresentCollisions() {
 	}
 }
 
+void Game::checkHouseCollisions() {
+	//Checks if the first house is off the screen
+	if (houses[0].getX() + 352 < 0) {
+		int randHouseOffset = rand() % 900 + 600;
+		houses.erase(houses.begin() + 0);
+		houses.push_back(house);
+		houses[houses.size() - 1].setPosition(
+				houses[houses.size() - 2].getX() + randHouseOffset,
+				houses[0].getY());
+		//Assigns the new house a random texture
+		int randHouseInt = rand() % 4;
+		switch (randHouseInt) {
+		case 0:
+			houses[houses.size() - 1].setTexture(houseTexture1);
+			break;
+		case 1:
+			houses[houses.size() - 1].setTexture(houseTexture2);
+			break;
+		case 2:
+			houses[houses.size() - 1].setTexture(houseTexture3);
+			break;
+		case 3:
+			houses[houses.size() - 1].setTexture(houseTexture4);
+			break;
+		default:
+			break;
+		}
+		spawnNewObstacle(randHouseOffset);
+	}
+}
+
 void Game::checkObstacleCollisions() {
 	for (unsigned i = 0; i < obstacles.size(); i++) {
 		if (isColliding(obstacles[i].getX(), obstacles[i].getY(),
@@ -266,8 +269,7 @@ void Game::spawnNewObstacle(int houseOffset) {
 		case 0:
 			obstacles.push_back(bird);
 			obstacles[obstacles.size() - 1].setPosition(
-					houses[houses.size() - 2].getX() + houseOffset / 2,
-					350);
+					houses[houses.size() - 2].getX() + houseOffset / 2, 350);
 			break;
 		case 1:
 			obstacles.push_back(plane);
@@ -321,11 +323,13 @@ void Game::draw() {
 		std::string scoreString = "Score: " + std::to_string(score);
 		std::string presentsDroppedString = "Presents Dropped: "
 				+ std::to_string(presentsDropped);
-		std::string obstaclesHitString = "Obstacles Hit: " + std::to_string(obstaclesHit);
+		std::string obstaclesHitString = "Obstacles Hit: "
+				+ std::to_string(obstaclesHit);
 		window.render(Vector2f(10, 10), scoreString.c_str(), font36, black);
 		window.render(Vector2f(210, 10), presentsDroppedString.c_str(), font36,
 				black);
-		window.render(Vector2f(610, 10), obstaclesHitString.c_str(), font36, black);
+		window.render(Vector2f(610, 10), obstaclesHitString.c_str(), font36,
+				black);
 		if (isPaused()) {
 			window.renderCenter(Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT - 50),
 					"Game Paused", font84, black);
