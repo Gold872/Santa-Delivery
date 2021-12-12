@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <memory>
 #include "Entity.h"
 #include "Math.h"
@@ -14,9 +15,13 @@ public:
 	void fillScreen(int r, int g, int b);
 	void render(Entity &entity);
 	void render(int x, int y, std::shared_ptr<SDL_Texture> texture);
-	void render(Vector2f position, Vector2f scale, int w, int h, std::shared_ptr<SDL_Texture> texture);
-	void render(Vector2f position, const char *text, TTF_Font *font, SDL_Color textColor);
-	void renderCenter(Vector2f position, const char *text, TTF_Font *font, SDL_Color textColor);
+	void render(Vector2f position, Vector2f scale, int w, int h,
+			std::shared_ptr<SDL_Texture> texture);
+	void render(Vector2f position, const char *text, TTF_Font *font,
+			SDL_Color textColor);
+	void renderCenter(Vector2f position, const char *text, TTF_Font *font,
+			SDL_Color textColor);
+	void playAudio(Mix_Chunk *audioChunk);
 	void display();
 private:
 	SDL_Window *window;

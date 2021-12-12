@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <memory>
 #include <stdlib.h>
 #include <time.h>
@@ -15,6 +16,7 @@
 
 int SCREEN_WIDTH = 1200, SCREEN_HEIGHT = 700;
 Uint8 MAX_FPS = 60;
+float ENTITY_SPEED = 6;
 int MAX_HOUSES = 3; //The max amount of houses that will appear at once
 
 RenderWindow window("Santa's Delivery", SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -50,6 +52,12 @@ TTF_Font *font36 = TTF_OpenFont("res/fonts/comic_sans.ttf", 36);
 TTF_Font *font24 = TTF_OpenFont("res/fonts/comic_sans.ttf", 24);
 SDL_Color black = { 0, 0, 0 };
 
+Mix_Chunk *deliverSound = Mix_LoadWAV("res/audio/deliver.wav");
+Mix_Chunk *dropSound = Mix_LoadWAV("res/audio/drop.wav");
+Mix_Chunk *openSound = Mix_LoadWAV("res/audio/open.wav");
+Mix_Chunk *hitSound = Mix_LoadWAV("res/audio/hit.wav");
+Mix_Chunk *pauseSound = Mix_LoadWAV("res/audio/pause.wav");
+
 Present present(Vector2f(0, 0), Vector2f(50, 50), 2000, 1710, presentTexture);
 
 int santaWidth = 1920, santaHeight = 1152;
@@ -66,7 +74,7 @@ Obstacle bird(Vector2f(0, 0), Vector2f(birdWidth / 20, birdHeight / 20),
 		birdWidth, birdHeight, birdTexture);
 
 int planeWidth = 2409, planeHeight = 903;
-Obstacle plane(Vector2f(0, 0), Vector2f(planeWidth / 5, planeHeight / 5),
+Obstacle plane(Vector2f(0, 0), Vector2f(planeWidth / 6, planeHeight / 6),
 		planeWidth, planeHeight, planeTexture);
 
 void Game::checkInput() {
@@ -109,6 +117,7 @@ void Game::checkInput() {
 			case SDLK_ESCAPE:
 				if (e.key.repeat == 0 && state == GAME) {
 					setPaused(!isPaused());
+					window.playAudio(pauseSound);
 				}
 				break;
 			}
@@ -207,6 +216,7 @@ void Game::checkPresentCollisions() {
 					houses[j].getChimneyWidth(),
 					houses[j].getChimneyHeight())) {
 				presentsDelivered++;
+				window.playAudio(deliverSound);
 				presents.erase(presents.begin() + i);
 			}
 		}
@@ -256,6 +266,7 @@ void Game::checkObstacleCollisions() {
 				santa.getScale().y - 10) && !obstacles[i].hasCollided()) {
 			obstacles[i].setCollided(true);
 			obstaclesHit++;
+			window.playAudio(hitSound);
 		}
 	}
 }
@@ -284,6 +295,7 @@ void Game::spawnNewObstacle(int houseOffset) {
 void Game::drop() {
 	presents.push_back(present);
 	presents.back().setPosition(santa.getX() + 50, santa.getY() + 100);
+	window.playAudio(dropSound);
 }
 
 void Game::draw() {
@@ -304,7 +316,7 @@ void Game::draw() {
 								+ SCREEN_HEIGHT + 100),
 				"Help Santa Deliver His Presents while Dodging Obstacles in the Air",
 				font36, black);
-		window.renderCenter(Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT + 300),
+		window.renderCenter(Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT * 2 - 50),
 				"Press Space to Start", font24, black);
 		break;
 	case GAME:
@@ -345,6 +357,7 @@ void Game::draw() {
 }
 
 void Game::init() {
+	window.playAudio(openSound);
 	srand(time(NULL));
 //Creates 3 new houses that are 600 pixels apart from each other
 	for (int i = 0; i < MAX_HOUSES; i++) {
@@ -389,14 +402,14 @@ void Game::mainLoop() {
 			checkYVelocity(santa.getDeltaTimeX(), santa.getDeltaTimeY());
 			//Moves the presents
 			for (unsigned i = 0; i < presents.size(); i++) {
-				presents[i].update(10);
+				presents[i].update(2 * ENTITY_SPEED);
 			}
 			//Moves the houses
 			for (unsigned i = 0; i < houses.size(); i++) {
-				houses[i].update(5);
+				houses[i].update(ENTITY_SPEED);
 			}
 			for (unsigned i = 0; i < obstacles.size(); i++) {
-				obstacles[i].update(-5, 0);
+				obstacles[i].update(-ENTITY_SPEED, 0);
 			}
 			draw();
 			checkCollisions();
