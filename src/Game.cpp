@@ -206,7 +206,7 @@ void Game::checkPresentCollisions() {
 					houses[j].getChimneyX(), houses[j].getChimneyY(),
 					houses[j].getChimneyWidth(),
 					houses[j].getChimneyHeight())) {
-				score += 10;
+				presentsDelivered++;
 				presents.erase(presents.begin() + i);
 			}
 		}
@@ -255,7 +255,6 @@ void Game::checkObstacleCollisions() {
 				santa.getX() + 5, santa.getY() + 5, santa.getScale().x - 10,
 				santa.getScale().y - 10) && !obstacles[i].hasCollided()) {
 			obstacles[i].setCollided(true);
-			score--;
 			obstaclesHit++;
 		}
 	}
@@ -301,7 +300,8 @@ void Game::draw() {
 				font84, black);
 		window.renderCenter(
 				Vector2f(SCREEN_WIDTH,
-						5 * SDL_sin(SDL_GetTicks() * (3.14 / 750)) + SCREEN_HEIGHT + 100),
+						5 * SDL_sin(SDL_GetTicks() * (3.14 / 750))
+								+ SCREEN_HEIGHT + 100),
 				"Help Santa Deliver His Presents while Dodging Obstacles in the Air",
 				font36, black);
 		window.renderCenter(Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT + 300),
@@ -321,15 +321,17 @@ void Game::draw() {
 		for (unsigned i = 0; i < obstacles.size(); i++) {
 			window.render(obstacles[i]);
 		}
-		std::string scoreString = "Score: " + std::to_string(score);
+		std::string presentsDeliveredString = "Presents Delivered: "
+				+ std::to_string(presentsDelivered);
 		std::string presentsDroppedString = "Presents Dropped: "
 				+ std::to_string(presentsDropped);
 		std::string obstaclesHitString = "Obstacles Hit: "
 				+ std::to_string(obstaclesHit);
-		window.render(Vector2f(10, 10), scoreString.c_str(), font36, black);
-		window.render(Vector2f(210, 10), presentsDroppedString.c_str(), font36,
+		window.render(Vector2f(10, 10), presentsDeliveredString.c_str(), font36,
 				black);
-		window.render(Vector2f(610, 10), obstaclesHitString.c_str(), font36,
+		window.render(Vector2f(410, 10), presentsDroppedString.c_str(), font36,
+				black);
+		window.render(Vector2f(810, 10), obstaclesHitString.c_str(), font36,
 				black);
 		if (isPaused()) {
 			window.renderCenter(Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT - 50),

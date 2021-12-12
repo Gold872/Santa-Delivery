@@ -45,7 +45,7 @@ public:
 		this->state = state;
 	}
 
-	int score = 0;
+	int presentsDelivered = 0;
 	int presentsDropped = 0;
 	int obstaclesHit = 0;
 
