@@ -250,10 +250,10 @@ void Game::checkHouseCollisions() {
 
 void Game::checkObstacleCollisions() {
 	for (unsigned i = 0; i < obstacles.size(); i++) {
-		if (isColliding(obstacles[i].getX(), obstacles[i].getY(),
-				obstacles[i].getScale().x, obstacles[i].getScale().y,
-				santa.getX(), santa.getY(), santa.getScale().x,
-				santa.getScale().y) && !obstacles[i].hasCollided()) {
+		if (isColliding(obstacles[i].getX() + 5, obstacles[i].getY() + 5,
+				obstacles[i].getScale().x - 10, obstacles[i].getScale().y - 10,
+				santa.getX() + 5, santa.getY() + 5, santa.getScale().x - 10,
+				santa.getScale().y - 10) && !obstacles[i].hasCollided()) {
 			obstacles[i].setCollided(true);
 			score--;
 			obstaclesHit++;
