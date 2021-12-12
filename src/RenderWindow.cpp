@@ -11,6 +11,12 @@ RenderWindow::RenderWindow(const char *title, int width, int height) {
 	if (window == NULL) {
 		std::cout << "Failed to Create Window " << SDL_GetError() << std::endl;
 	}
+	SDL_Surface *icon = IMG_Load("res/images/santa_sleigh_icon.png");
+	if(icon == NULL) {
+		std::cout << "Error Loading Image Icon" << SDL_GetError() << std::endl;
+	}
+	SDL_SetWindowIcon(window, icon);
+	SDL_FreeSurface(icon);
 
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 

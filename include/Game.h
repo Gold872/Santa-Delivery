@@ -16,6 +16,7 @@ public:
 	void checkCollisions();
 	void checkSantaCollisions();
 	void checkPresentCollisions();
+	void checkHouseCollisions();
 	void checkObstacleCollisions();
 	void mainLoop();
 	void draw();
