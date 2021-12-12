@@ -16,13 +16,13 @@ First you have to download [Mingw32](https://sourceforge.net/projects/mingw-w64/
 
 Execute the following command in the project folder:
 
-```bash
+```
 g++ -c src/*.cpp -std=c++14 -O3 -Wall -m64 -I include -I C:/SDL2-w32/include && g++ *.o -o bin/release/main -s -L C:/SDL2-w32/lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer && start bin/release/main
 ```
 
 # Linux
 
-```bash
+```
 g++ -c src/*.cpp -std=c++14 -O3 -Wall -m64 -I include && mkdir -p bin/release && g++ *.o -o bin/release/main -s -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer
 ```
 
