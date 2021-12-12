@@ -9,7 +9,7 @@
 class Santa : public Entity {
 public:
 	Santa(Vector2f position, Vector2f scale, int w, int h, std::shared_ptr<SDL_Texture> texture);
-	void update(double deltaX, double deltaY);
+	void update(double deltaX, double deltaY) override;
 	void setMovingX(bool val);
 	void setMovingY(bool val);
 	void setDeltaTimeX(double deltaX);

@@ -21,6 +21,11 @@ void Entity::update(double deltaTime) {
 
 }
 
+void Entity::update(double deltaX = 0, double deltaY = 0) {
+	getPosition().setX(getX() + deltaX);
+	getPosition().setY(getY() + deltaY);
+}
+
 std::shared_ptr<SDL_Texture> Entity::getTexture() {
 	return texture;
 }

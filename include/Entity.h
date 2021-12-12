@@ -11,6 +11,7 @@ public:
 			std::shared_ptr<SDL_Texture> texture); //The scale Vector2f is what it will be scaled down to
 	virtual ~Entity();
 	virtual void update(double deltaTime);
+	virtual void update(double deltaX, double deltaY);
 	Vector2f& getPosition() {
 		return position;
 	}

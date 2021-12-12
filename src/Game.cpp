@@ -14,7 +14,7 @@
 #include <iostream>
 
 int SCREEN_WIDTH = 1200, SCREEN_HEIGHT = 700;
-int MAX_FPS = 60;
+Uint8 MAX_FPS = 60;
 int MAX_HOUSES = 3; //The max amount of houses that will appear at once
 
 RenderWindow window("Santa's Delivery", SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -40,6 +40,11 @@ std::shared_ptr<SDL_Texture> houseTexture3 = window.loadTexture(
 std::shared_ptr<SDL_Texture> houseTexture4 = window.loadTexture(
 		"res/images/house4.png");
 
+std::shared_ptr<SDL_Texture> birdTexture = window.loadTexture(
+		"res/images/bird.png");
+std::shared_ptr<SDL_Texture> planeTexture = window.loadTexture(
+		"res/images/plane.png");
+
 TTF_Font *font84 = TTF_OpenFont("res/fonts/comic_sans.ttf", 84);
 TTF_Font *font36 = TTF_OpenFont("res/fonts/comic_sans.ttf", 36);
 TTF_Font *font24 = TTF_OpenFont("res/fonts/comic_sans.ttf", 24);
@@ -56,25 +61,33 @@ House house(Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT - 175),
 		Vector2f(houseWidth / 1.75, houseHeight / 1.75), 704, 624,
 		houseTexture1);
 
+int birdWidth = 2293, birdHeight = 1930;
+Obstacle bird(Vector2f(0, 0), Vector2f(birdWidth / 20, birdHeight / 20),
+		birdWidth, birdHeight, birdTexture);
+
+int planeWidth = 2409, planeHeight = 903;
+Obstacle plane(Vector2f(0, 0), Vector2f(planeWidth / 5, planeHeight / 5),
+		planeWidth, planeHeight, planeTexture);
+
 void Game::checkInput() {
 	double deltaX = santa.getDeltaTimeX();
 	double deltaY = santa.getDeltaTimeY();
 
 	const Uint8 *keystates = SDL_GetKeyboardState(NULL);
-	if (keystates[SDL_SCANCODE_LEFT] && state == GAME) {
+	if (keystates[SDL_SCANCODE_LEFT] && state == GAME && !isPaused()) {
 		deltaX -= acceleration;
 		santa.update(deltaX - acceleration, deltaY);
 		santa.setMovingX(true);
-	} else if (keystates[SDL_SCANCODE_RIGHT] && state == GAME) {
+	} else if (keystates[SDL_SCANCODE_RIGHT] && state == GAME && !isPaused()) {
 		deltaX += acceleration;
 		santa.update(deltaX, deltaY);
 		santa.setMovingX(true);
 	}
-	if (keystates[SDL_SCANCODE_UP] && state == GAME) {
+	if (keystates[SDL_SCANCODE_UP] && state == GAME && !isPaused()) {
 		deltaY -= acceleration;
 		santa.update(deltaX, deltaY);
 		santa.setMovingY(true);
-	} else if (keystates[SDL_SCANCODE_DOWN] && state == GAME) {
+	} else if (keystates[SDL_SCANCODE_DOWN] && state == GAME && !isPaused()) {
 		deltaY += acceleration;
 		santa.update(deltaX, deltaY);
 		santa.setMovingY(true);
@@ -84,13 +97,18 @@ void Game::checkInput() {
 		if (e.type == SDL_KEYDOWN) {
 			switch (e.key.keysym.sym) {
 			case SDLK_SPACE:
-				if ((e.key.repeat == 0)) {
+				if (e.key.repeat == 0 && !isPaused()) {
 					if (state == GAME) {
 						drop();
 						presentsDropped++;
 					} else if (state == MENU) {
 						setState(GAME);
 					}
+				}
+				break;
+			case SDLK_ESCAPE:
+				if (e.key.repeat == 0 && state == GAME) {
+					setPaused(!isPaused());
 				}
 				break;
 			}
@@ -145,10 +163,6 @@ void Game::checkYVelocity(double deltaX, double deltaY) {
 	}
 }
 
-void Game::updatePresent(Vector2f &presentPosition, float deltaY) {
-	presentPosition.setY(presentPosition.getY() + deltaY);
-}
-
 bool Game::isColliding(float a_x, float a_y, float a_w, float a_h, float b_x,
 		float b_y, float b_w, float b_h) {
 	return (a_x + a_w > b_x) && (a_x < b_x + b_w) && (a_y + a_h > b_y)
@@ -156,6 +170,41 @@ bool Game::isColliding(float a_x, float a_y, float a_w, float a_h, float b_x,
 }
 
 void Game::checkCollisions() {
+	checkSantaCollisions();
+	checkPresentCollisions();
+	checkObstacleCollisions();
+
+	//Checks if the first house is off the screen
+	if (houses[0].getX() + 352 < 0) {
+		int randHouseOffset = rand() % 900 + 600;
+		houses.erase(houses.begin() + 0);
+		houses.push_back(house);
+		houses[houses.size() - 1].setPosition(
+				houses[houses.size() - 2].getX() + randHouseOffset,
+				houses[0].getY());
+		//Assigns the new house a random texture
+		int randHouseInt = rand() % 4;
+		switch (randHouseInt) {
+		case 0:
+			houses[houses.size() - 1].setTexture(houseTexture1);
+			break;
+		case 1:
+			houses[houses.size() - 1].setTexture(houseTexture2);
+			break;
+		case 2:
+			houses[houses.size() - 1].setTexture(houseTexture3);
+			break;
+		case 3:
+			houses[houses.size() - 1].setTexture(houseTexture4);
+			break;
+		default:
+			break;
+		}
+		spawnNewObstacle(randHouseOffset);
+	}
+}
+
+void Game::checkSantaCollisions() {
 	//If Santa is on the left edge, it doesn't let it go past it
 	if (santa.getX() <= 0) {
 		//Sets the X to left of the screen
@@ -174,6 +223,9 @@ void Game::checkCollisions() {
 		//Sets the Y position to the bottom of the screen
 		santa.getPosition().setY(475 - santaHeight / 6);
 	}
+}
+
+void Game::checkPresentCollisions() {
 	//Checks if a present lands in the chimney
 	for (unsigned i = 0; i < presents.size(); i++) {
 		for (unsigned j = 0; j < houses.size(); j++) {
@@ -182,36 +234,45 @@ void Game::checkCollisions() {
 					houses[j].getChimneyX(), houses[j].getChimneyY(),
 					houses[j].getChimneyWidth(),
 					houses[j].getChimneyHeight())) {
-				score++;
+				score += 10;
 				presents.erase(presents.begin() + i);
 			}
 		}
+		//Removes any presents that are below the screen
 		if (presents[i].getY() > SCREEN_HEIGHT) {
 			presents.erase(presents.begin() + i);
 		}
 	}
-	//Checks if the first house is off the screen
-	if (houses[0].getX() + 352 < 0) {
-		int randHouseOffset = rand() % 900 + 600;
-		houses.erase(houses.begin() + 0);
-		houses.push_back(house);
-		houses[houses.size() - 1].setPosition(
-				houses[houses.size() - 2].getX() + randHouseOffset,
-				houses[0].getY());
-		//Assigns the new house a random texture
-		int randInt = rand() % 4;
-		switch (randInt) {
+}
+
+void Game::checkObstacleCollisions() {
+	for (unsigned i = 0; i < obstacles.size(); i++) {
+		if (isColliding(obstacles[i].getX(), obstacles[i].getY(),
+				obstacles[i].getScale().x, obstacles[i].getScale().y,
+				santa.getX(), santa.getY(), santa.getScale().x,
+				santa.getScale().y) && !obstacles[i].hasCollided()) {
+			obstacles[i].setCollided(true);
+			score--;
+			obstaclesHit++;
+		}
+	}
+}
+
+void Game::spawnNewObstacle(int houseOffset) {
+	//Assigns a random obstacle to be assigned if the houses are spaced far apart enough
+	if (houseOffset > 700) {
+		int randObstacleInt = rand() % 2;
+		switch (randObstacleInt) {
 		case 0:
-			houses[houses.size() - 1].setTexture(houseTexture1);
+			obstacles.push_back(bird);
+			obstacles[obstacles.size() - 1].setPosition(
+					houses[houses.size() - 2].getX() + houseOffset / 2,
+					350);
 			break;
 		case 1:
-			houses[houses.size() - 1].setTexture(houseTexture2);
-			break;
-		case 3:
-			houses[houses.size() - 1].setTexture(houseTexture3);
-			break;
-		case 4:
-			houses[houses.size() - 1].setTexture(houseTexture4);
+			obstacles.push_back(plane);
+			obstacles[obstacles.size() - 1].setPosition(
+					houses[houses.size() - 2].getX() + houseOffset / 2, 50);
 			break;
 		default:
 			break;
@@ -231,10 +292,15 @@ void Game::draw() {
 		window.render(0, 0, backgroundTexture);
 		window.render(0, 0, mountainTexture);
 		window.render(0, 0, snowTexture);
-		window.renderCenter(Vector2f(SCREEN_WIDTH, sin(SDL_GetTicks()/100) * 2 + SCREEN_HEIGHT - 100),
+		window.renderCenter(
+				Vector2f(SCREEN_WIDTH,
+						sin(SDL_GetTicks() / 100) * 2 + SCREEN_HEIGHT - 100),
 				"Santa Delivery Game", font84, black);
-		window.renderCenter(Vector2f(SCREEN_WIDTH, sin(SDL_GetTicks()/100) * 2 + SCREEN_HEIGHT + 100),
-				"Help Santa Deliver His Presents", font36, black);
+		window.renderCenter(
+				Vector2f(SCREEN_WIDTH,
+						sin(SDL_GetTicks() / 100) * 2 + SCREEN_HEIGHT + 100),
+				"Help Santa Deliver His Presents while Dodging Obstacles in the Air",
+				font36, black);
 		window.renderCenter(Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT + 300),
 				"Press Space to Start", font24, black);
 		break;
@@ -249,12 +315,23 @@ void Game::draw() {
 		for (unsigned i = 0; i < houses.size(); i++) {
 			window.render(houses[i]);
 		}
-		std::string scoreNumber = "Score: " + std::to_string(score);
-		std::string presentsDroppedNumber = "Presents Dropped: "
+		for (unsigned i = 0; i < obstacles.size(); i++) {
+			window.render(obstacles[i]);
+		}
+		std::string scoreString = "Score: " + std::to_string(score);
+		std::string presentsDroppedString = "Presents Dropped: "
 				+ std::to_string(presentsDropped);
-		window.render(Vector2f(10, 10), scoreNumber.c_str(), font36, black);
-		window.render(Vector2f(200, 10), presentsDroppedNumber.c_str(), font36,
+		std::string obstaclesHitString = "Obstacles Hit: " + std::to_string(obstaclesHit);
+		window.render(Vector2f(10, 10), scoreString.c_str(), font36, black);
+		window.render(Vector2f(210, 10), presentsDroppedString.c_str(), font36,
 				black);
+		window.render(Vector2f(610, 10), obstaclesHitString.c_str(), font36, black);
+		if (isPaused()) {
+			window.renderCenter(Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT - 50),
+					"Game Paused", font84, black);
+			window.renderCenter(Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT + 100),
+					"Press Escape to Continue", font24, black);
+		}
 		break;
 	}
 	window.display();
@@ -262,7 +339,7 @@ void Game::draw() {
 
 void Game::init() {
 	srand(time(NULL));
-	//Creates 3 new houses that are 600 pixels apart from each other
+//Creates 3 new houses that are 600 pixels apart from each other
 	for (int i = 0; i < MAX_HOUSES; i++) {
 		int randHouseOffset = rand() % 900 + 600;
 		houses.push_back(house);
@@ -287,6 +364,7 @@ void Game::init() {
 			default:
 				break;
 			}
+			spawnNewObstacle(randHouseOffset);
 		}
 	}
 }
@@ -299,18 +377,27 @@ void Game::mainLoop() {
 		draw();
 		break;
 	case GAME:
-		checkXVelocity(santa.getDeltaTimeX(), santa.getDeltaTimeY());
-		checkYVelocity(santa.getDeltaTimeX(), santa.getDeltaTimeY());
-		for (unsigned i = 0; i < presents.size(); i++) {
-			presents[i].update(10);
+		if (!isPaused()) {
+			checkXVelocity(santa.getDeltaTimeX(), santa.getDeltaTimeY());
+			checkYVelocity(santa.getDeltaTimeX(), santa.getDeltaTimeY());
+			//Moves the presents
+			for (unsigned i = 0; i < presents.size(); i++) {
+				presents[i].update(10);
+			}
+			//Moves the houses
+			for (unsigned i = 0; i < houses.size(); i++) {
+				houses[i].update(5);
+			}
+			for (unsigned i = 0; i < obstacles.size(); i++) {
+				obstacles[i].update(-5, 0);
+			}
+			draw();
+			checkCollisions();
+			santa.setMovingX(false);
+			santa.setMovingY(false);
+		} else {
+			draw();
 		}
-		for (unsigned i = 0; i < houses.size(); i++) {
-			houses[i].update(5);
-		}
-		draw();
-		checkCollisions();
-		santa.setMovingX(false);
-		santa.setMovingY(false);
 		break;
 	}
 	updateFPS(starting_tick);
